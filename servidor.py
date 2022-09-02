@@ -2,9 +2,9 @@ import paho.mqtt.client as mqtt
 from random import randrange, uniform
 import time
 
-mqttBroker ="mosquitto" 
+mqttBroker ="192.168.18.51:1883" 
 
-client = mqtt.Client("Temperature_Inside")
+client = mqtt.Client("client")
 client.connect(mqttBroker) 
 
 while True:

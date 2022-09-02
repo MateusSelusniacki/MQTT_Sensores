@@ -4,7 +4,7 @@ import time
 def on_message(client, userdata, message):
     print("received message: " ,str(message.payload.decode("utf-8")))
 
-mqttBroker ="mosquitto"
+mqttBroker ="test.mosquitto.org"
 
 client = mqtt.Client("Smartphone")
 client.connect(mqttBroker) 
@@ -16,3 +16,4 @@ client.on_message=on_message
 
 time.sleep(30)
 client.loop_stop()
+
