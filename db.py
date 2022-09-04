@@ -53,8 +53,6 @@ def getCode(codigo):
 
         return ''
 
-    
-
 def updateCode(codigo):
     sql = '''UPDATE codigo
         SET cod = ?
