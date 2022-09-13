@@ -1,10 +1,12 @@
-import subscriber as mqtt
 import publisher as pub
 import subscriber as sub
 import threading
 from kivy.app import App
 from kivy.uix.button import Button
+from kivy.clock import Clock
 import time
+from functools import partial
+import plyer
 
 class mainApp(App):
     def build(self):
@@ -19,35 +21,40 @@ class mainApp(App):
         return b
 
     def t(self):
+        print('aguardando topico client')
+        comando = sub.run('client')
+        print('aguardando ack')
+        notification = plyer.notification.notify(title='Responder', message = comando)
         self.is_calling = True
-        mqtt.run('client')
-        self.root.opacity = 1
-
-    def btn_click(self,b):
-        pub.run('accept','accept')
-        print('cliente: enviando accept')
         sub.run('ack')
         print('ack recebido')
-
-        self.root.opacity = 0
         self.is_calling = False
-
+        print('ack recebido')
+        notification = plyer.notification.notify(title='Já foi respondido', message = comando)
+        
         th = threading.Thread(target = self.t)
 
         th.start()
+
+    def btn_click(self,b):
+        self.is_calling = False
+        pub.run('accept','accept')
+        print('cliente: enviando accept')
+
+    def isThreadAlive(self,*a):
+        if(self.is_calling):
+            self.root.opacity = 1
+        else:
+            self.root.opacity = 0
 
     def on_start(self):
         self.is_calling = False
         self.root.bind(on_press = self.btn_click)
         print('iniciando thread cliente')
+
         th = threading.Thread(target = self.t)
 
         th.start()
+        Clock.schedule_interval(self.isThreadAlive,0.2)
         
-    '''def on_start(self):
-        self.root.bind(on_press = self.btn_click)
-        print('iniciando thread cliente')
-        th = threading.Thread(target = self.t)
-
-        th.start()'''
 mainApp().run()

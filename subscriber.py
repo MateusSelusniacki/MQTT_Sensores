@@ -6,13 +6,14 @@ from paho.mqtt import client as mqtt_client
 
 import publisher
 
-
 broker = 'broker.emqx.io'
 port = 1883
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 100)}'
 username = 'emqx'
 password = 'public'
+response = []
+
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
@@ -30,7 +31,8 @@ def connect_mqtt() -> mqtt_client:
 def subscribe(client: mqtt_client,topic):
     print('subscribe subscriber')
     def on_message(client, userdata, msg):
-        print(f'publicação recebido - topico: {topic}')
+        print(f'publicação recebido - topico: {topic} {str(msg.payload)}')
+        response.append(str(msg.payload.decode()[10:]))
         client.disconnect()
 
     client.subscribe(topic)
@@ -42,7 +44,8 @@ def run(topic):
     print('enviando dado do subscriber')
     subscribe(client,topic)
     client.loop_forever()
-
+    print('reponse',response)
+    return response[0]
 
 if __name__ == '__main__':
     run()

@@ -26,10 +26,10 @@ def create_connection(db_file):
     return conn
 
 def insertCode(codigo):
-    sql = ''' INSERT INTO codigo(cod)
-              VALUES(?) '''
+    sql = ''' INSERT INTO codigo(nome,numero,comando)
+              VALUES(?,?,?) '''
     cur = conn.cursor()
-    cur.execute(sql, (codigo,))
+    cur.execute(sql, codigo)
     conn.commit()
 
     return cur.lastrowid
