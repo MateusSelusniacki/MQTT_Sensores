@@ -1,24 +1,30 @@
 import publisher as pub
 import subscriber as sub
 import threading
-from kivy.app import App
-from kivy.uix.button import Button
+from kivymd.app import MDApp
+from kivymd.uix.screen import Screen
+from kivymd.uix.button import MDRectangleFlatButton
+from kivymd.uix.textfield import MDTextField
 from kivy.clock import Clock
 import time
 from functools import partial
 import plyer
 
-class mainApp(App):
+class mainApp(MDApp):
     def build(self):
-        b = Button(
+        b = MDRectangleFlatButton(
             text = "responder",
             size_hint = (0.1,0.1),
-            opacity = 0,
+            pos_hint = {'center_x':0.5, 'center_y':0.5},
+            opacity = 1,
             on_press=self.btn_click
         )
-        b.pos_hint['x'] = 0.5
-        b.pos_hint['y'] = 0.5
         return b
+
+    def btn_click(self,b):
+        self.is_calling = False
+        pub.run('accept','accept')
+        print('cliente: enviando accept')
 
     def t(self):
         print('aguardando topico client')
@@ -36,11 +42,6 @@ class mainApp(App):
 
         th.start()
 
-    def btn_click(self,b):
-        self.is_calling = False
-        pub.run('accept','accept')
-        print('cliente: enviando accept')
-
     def isThreadAlive(self,*a):
         if(self.is_calling):
             self.root.opacity = 1
@@ -56,5 +57,9 @@ class mainApp(App):
 
         th.start()
         Clock.schedule_interval(self.isThreadAlive,0.2)
+    
+    def on_stop(self):
+        pub.disconnect()
+        print('fechando')
         
 mainApp().run()

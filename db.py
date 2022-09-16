@@ -35,28 +35,26 @@ def insertCode(codigo):
     return cur.lastrowid
 
 def getCode(codigo):
+    print(codigo + "|")
     try:
         sql = ''' SELECT * FROM codigo
-                WHERE cod = ?
+                WHERE comando = ?
                 '''
         cur = conn.cursor()
         cur.execute(sql, (codigo,))
         
         tuples = cur.fetchall()[0][0]
+        print('try')
         return tuples
     except:
-        sql = ''' INSERT INTO codigo(cod)
-              VALUES(?) '''
-        cur = conn.cursor()
-        cur.execute(sql, (codigo,))
-        conn.commit()
-
+        print('except')
         return ''
 
 def updateCode(codigo):
     sql = '''UPDATE codigo
-        SET cod = ?
-        WHERE cod = ?'''
+        SET nome = ?,
+            numero = ?
+        WHERE comando = ?'''
     cur = conn.cursor()
     cur.execute(sql, codigo)
     conn.commit()

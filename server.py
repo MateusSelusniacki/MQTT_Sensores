@@ -3,6 +3,7 @@ import time
 import db
 import subscriber as sub
 import schedule
+import threading
 
 queue = []
 
@@ -26,4 +27,26 @@ def admin_publish(comando):
     
     publisher.run('admin_ack','admin_ack')
 
-admin_publish('comando')
+def on_signal(signal,c_a):
+    if(c_a == 'a'):
+        print('admin')
+        admin_publish(signal)
+    else:
+        print('client')
+        client_publish(signal)
+
+def read_rasp():
+    signal = "comando"
+    command = db.getCode(signal)
+    if(command == ''):
+        print('a')
+        c_a = 'a'
+    else:
+        print('c')
+        c_a = 'c'
+        
+    th = threading.Thread(target = on_signal,args=(signal,c_a))
+
+    th.start()
+
+read_rasp()

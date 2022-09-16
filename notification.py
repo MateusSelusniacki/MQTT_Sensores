@@ -18,7 +18,7 @@ noti.setContentTitle(AndroidString('title'.encode('utf-8')))
 noti.setContentText(AndroidString('message'.encode('utf-8')))
 noti.setSmallIcon(icon)
 noti.setAutoCancel(True)    
-noti.addAction(Action)
+#noti.addAction(Action)
 nm = PythonActivity.mActivity.getSystemService(PythonActivity.NOTIFICATION_SERVICE)
 nm.notify(0,noti.build())
         
