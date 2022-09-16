@@ -5,18 +5,27 @@ import subscriber as sub
 import schedule
 import threading
 import datetime
-import schedule
+from schedule import every, repeat, run_pending
 
-def job():
-    print('job')
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
-
-schedule.every(1).seconds.do(job)
-
+thread_end = [0]
 queue = []
+
+def t():
+    while not thread_end[0]:
+        run_pending()
+        time.sleep(1)
+
+th = threading.Thread(target = t)
+th.start()
+
+@repeat(every(1).seconds)
+def job():
+    removes = []
+    for i in queue:
+        if((datetime.datetime.now() - i[1]).total_seconds() > 3):
+            removes.append(i)
+    for j in removes:
+        queue.remove(j)
 
 def client_publish(comando):
     publisher.run('client',comando)
@@ -46,8 +55,7 @@ def on_signal(signal,c_a):
         print('client')
         client_publish(signal)
 
-def rasp_sender():
-    signal = "comando"
+def rasp_sender(signal):
     command = db.getCode(signal)
     if(command == ''):
         print('a')
@@ -66,16 +74,8 @@ def pulse_verification(pulse):
             print(pulse)
             return
     queue.append((pulse,datetime.datetime.now()))
-    print(queue)
-#!/usr/bin/env python3
-pulse_verification('123456')
-pulse_verification('123456')
-pulse_verification('123456')
-pulse_verification('654321')
-pulse_verification('654321')
+    rasp_sender(pulse)
 
-
-'''
 import argparse
 import signal
 import sys
@@ -110,5 +110,7 @@ while True:
         logging.info(str(rfdevice.rx_code) +
                      " [pulselength " + str(rfdevice.rx_pulselength) +
                      ", protocol " + str(rfdevice.rx_proto) + "]")
+        pulse_verification(str(rfdevice.rx_code))
+
     time.sleep(3)
-rfdevice.cleanup()'''
+rfdevice.cleanup()
