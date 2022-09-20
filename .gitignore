@@ -7,3 +7,7 @@ teste2.py
 pyvenv.cfg
 __pyache__
 System.db
+Admin.db
+System.db-journal
+Cliente.db
+icon.py

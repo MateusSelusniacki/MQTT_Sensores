@@ -6,7 +6,7 @@ def create_table():
     cur = con.cursor()
 
     try:
-        cur.execute("CREATE TABLE codigo(cod)")
+        cur.execute("CREATE TABLE tblControles(cod)")
         cur.close()
     except:
         pass
@@ -25,20 +25,37 @@ def create_connection(db_file):
 
     return conn
 
-def insertCode(codigo):
-    sql = ''' INSERT INTO codigo(nome,numero,comando)
-              VALUES(?,?,?) '''
+def insertCode(codigo): 
+    sql = ''' INSERT INTO tblControles(IdentfControle,CodItem,NomeControle,DescricaoControle,CodControle)
+              VALUES(?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, codigo)
     conn.commit()
 
     return cur.lastrowid
 
+def insertCodeAdmin(codigo):
+    sql = ''' INSERT INTO tblControles(IdentfControle,CodItem,NomeControle,DescricaoControle,CodControle)
+              VALUES(?,?,?,?,?) '''
+    cur = conn_admin.cursor()
+    cur.execute(sql, codigo)
+    conn_admin.commit()
+
+    return cur.lastrowid
+
+def getAll():
+    sql = ''' SELECT * FROM tblControles'''
+    cur = conn_admin.cursor()
+    cur.execute(sql)
+    
+    tuples = cur.fetchall()
+    return tuples
+
+
 def getCode(codigo):
-    print(codigo + "|")
     try:
-        sql = ''' SELECT * FROM codigo
-                WHERE comando = ?
+        sql = ''' SELECT * FROM tblControles
+                WHERE CodControle = ?
                 '''
         cur = conn.cursor()
         cur.execute(sql, (codigo,))
@@ -51,23 +68,71 @@ def getCode(codigo):
         return ''
 
 def updateCode(codigo):
-    sql = '''UPDATE codigo
-        SET nome = ?,
-            numero = ?
-        WHERE comando = ?'''
+    sql = '''UPDATE tblControles
+        SET IdentfControle = ?,
+            CodItem = ?,
+            NomeControle = ?,
+            DescricaoControle = ?
+        WHERE CodControle = ?'''
     cur = conn.cursor()
     cur.execute(sql, codigo)
     conn.commit()
 
     return cur.lastrowid
 
+def updateCodeAdmin(codigo):
+    sql = '''UPDATE tblControles
+        SET IdentfControle = ?,
+            CodItem = ?,
+            NomeControle = ?,
+            DescricaoControle = ?
+        WHERE CodControle = ?'''
+    cur = conn_admin.cursor()
+    cur.execute(sql, codigo)
+    conn_admin.commit()
+
+    return cur.lastrowid
+
 def deleteCode(codigo):
-    sql = '''DELETE FROM codigo
-        WHERE cod = ?'''
+    sql = '''DELETE FROM tblControles
+        WHERE NomeControle = ?'''
     cur = conn.cursor()
     cur.execute(sql, (codigo,))
     conn.commit()
 
     return cur.lastrowid
 
+def deleteCodeAdmin(codigo):
+    sql = '''DELETE FROM tblControles
+        WHERE NomeControle = ?'''
+    cur = conn_admin.cursor()
+    cur.execute(sql, (codigo,))
+    conn_admin.commit()
+
+    return cur.lastrowid
+
+def getServer():
+    sql = ''' SELECT * FROM servidor
+        '''
+    cur = conn_client.cursor()
+    cur.execute(sql)
+    
+    tuples = cur.fetchall()[0]
+    return list(tuples)
+
+def setServerBoo(server_tup):
+    sql = '''UPDATE servidor
+        SET porta = ?,
+            servidor = ?,
+            login = ?,
+            senha = ?,
+            boolean = ?
+        WHERE porta = ?'''
+
+    cur = conn_client.cursor()
+    cur.execute(sql, server_tup)
+    conn_client.commit()
+
 conn = create_connection('System.db')
+conn_client = create_connection('Cliente.db')
+conn_admin = create_connection('Admin.db')

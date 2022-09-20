@@ -2,7 +2,7 @@ import kivy
 kivy.require('2.1.0') # replace with your current kivy version !
 
 from kivymd.app import MDApp
-from kivymd.uix.screen import Screen
+from kivymd.theming import ThemeManager
 from kivymd.uix.button import MDRectangleFlatButton
 from kivymd.uix.textfield import MDTextField
 from kivy.lang import Builder
@@ -10,81 +10,339 @@ from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
+from kivy.uix.scrollview import ScrollView
+from kivy.core.window import Window
+
+from kivy.uix.boxlayout import BoxLayout
+
+from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
+
+import db
 
 import plyer
 import publisher as pub
-import subscriber as sub
+import subscriber_admin as sub_admin
+import subscriber_ack as sub_ack
 import threading
+import time
 
-class DemoApp(MDApp):
-    def build(self):
-        screen = Screen()
+codigo = []
+com = []
+options_btn = [0,0,0]
+enviar_pressed = [0]
+cmd = [""]
+inserting_db = []
+
+class Options(Screen):
+    def __init__(self,**kwargs):
+        super(Options,self).__init__(**kwargs)
+        self.theme_cls = ThemeManager()
         self.theme_cls.primary_palette = "Green"
-        self.button = MDRectangleFlatButton(text = 'Enviar',pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_click)
-        self.codigo = MDTextField(
-            hint_text =  "Codigo",
-            pos_hint = {'center_x':0.5, 'center_y':0.4},
+        self.Cad = MDRectangleFlatButton(text = 'Cadastrar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.6}, on_release = self.btn_Cad)
+        self.List = MDRectangleFlatButton(text = 'Listar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.5}, on_release = self.btn_List)
+        self.Del = MDRectangleFlatButton(text = 'Excluir',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.4}, on_release = self.btn_Del)
+
+        #self.add_widget(self.Cad)
+        self.add_widget(self.List)
+        self.add_widget(self.Del)
+
+        Clock.schedule_interval(self.clock_verification,0.2)
+
+    def on_enter(self):
+        if(len(inserting_db) != 0):
+            db.insertCodeAdmin(inserting_db[0])
+            inserting_db.pop(0)
+
+    def btn_Cad(self,b):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'cadastro'
+
+    def btn_List(self,b):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'listar'
+
+    def btn_Del(self,b):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'excluir'
+
+    def clock_verification(self,*a):
+        if(options_btn[0] and not options_btn[1]):
+            options_btn[1] = 1
+            self.add_widget(self.Cad)
+        if(not options_btn[0] and options_btn[2]):
+            options_btn[2] = 0
+            self.remove_widget(self.Cad)
+
+class Cadastro(Screen):
+    def __init__(self,**kwargs):
+        super(Cadastro,self).__init__(**kwargs)
+        self.theme_cls = ThemeManager()
+        self.theme_cls.primary_palette = "Green"
+        self.send = MDRectangleFlatButton(text = 'Enviar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
+        self.cancel = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
+        self.IdentfControle = MDTextField(
+            hint_text =  "identificador do Controle",
+            pos_hint = {'center_x':0.5, 'center_y':0.8},
             size_hint_x = None,
             width = 300,
         )
-        self.nome = MDTextField(
+        self.CodItem = MDTextField(
+            hint_text =  "Codigo do Item",
+            pos_hint = {'center_x':0.5, 'center_y':0.7},
+            size_hint_x = None,
+            width = 300,
+        )
+        self.NomeControle = MDTextField(
             hint_text =  "Nome",
-            pos_hint = {'center_x':0.5, 'center_y':0.5},
-            size_hint_x = None,
-            width = 300,
-        )
-        self.numero = MDTextField(
-            hint_text =  "Numero",
             pos_hint = {'center_x':0.5, 'center_y':0.6},
             size_hint_x = None,
             width = 300,
         )
+        self.Descricao = MDTextField(
+            hint_text =  "Descrição",
+            pos_hint = {'center_x':0.5, 'center_y':0.5},
+            size_hint_x = None,
+            width = 300,
+        )
+        self.CodControle = MDTextField(
+            hint_text =  "Codigo do Controle",
+            pos_hint = {'center_x':0.5, 'center_y':0.4},
+            size_hint_x = None,
+            width = 300,
+        )
         #self.comando = Builder.load_string(text_field)
-        screen.add_widget(self.codigo)
-        screen.add_widget(self.button)
-        screen.add_widget(self.nome)
-        screen.add_widget(self.numero)
-        return screen
+        self.add_widget(self.IdentfControle)
+        self.add_widget(self.CodItem)
+        self.add_widget(self.NomeControle)
+        self.add_widget(self.Descricao)
+        self.add_widget(self.CodControle)
+        self.add_widget(self.send)
+        self.add_widget(self.cancel)
+    
+        Clock.schedule_interval(self.clock_verification,0.2)
+    
+    def clock_verification(self,*a):
+        if(cmd[0] != ""):
+            print('entrou')
+            self.CodControle.text = cmd[0]
+            cmd[0] = ""
 
     def t(self):
+        pass
+    
+    def clear_field(self):
+        self.IdentfControle.text = ""
+        self.CodItem.text = ""
+        self.NomeControle.text = ""
+        self.Descricao.text = ""
+        self.CodControle.text = ""
+
+    def btn_send(self,b):
+        try:
+            int(self.IdentfControle.text)
+        except:
+            popupWindow = Popup(title="erro",content = Label(text ="Identificador de Controle Inválido"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+            return
+
+        try:
+            int(self.CodItem.text)
+        except:
+            popupWindow = Popup(title="erro",content = Label(text ="Código do Item Inválido"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+            return
+
+        if(self.CodControle.text == ""):
+            popupWindow = Popup(title="erro",content = Label(text ="Código de Controle Precisa ser preenchido"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+            return
+
+        enviar_pressed[0] = 1
+        enviar_pressed.append(int(self.IdentfControle.text))
+        enviar_pressed.append(int(self.CodItem.text))
+        enviar_pressed.append(self.NomeControle.text)
+        enviar_pressed.append(self.Descricao.text)
+        enviar_pressed.append(self.CodControle.text)
+
+        self.clear_field()
+
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'options'
+        options_btn[2] = 1
+
+    def btn_cancel(self,b):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'options'
+
+class Listar(Screen):
+    def __init__(self,**kwargs):
+        super(Listar,self).__init__(**kwargs)
+        self.theme_cls = ThemeManager()
+        self.theme_cls.primary_palette = "Green"
+        self.create_list()
+        
+    def create_list(self):
+        self.scroll = ScrollView(
+            do_scroll_y = True,
+            do_scroll_x = False,
+            size=(Window.width, Window.height),
+            size_hint = (1,None)
+        )
+        
+        self.boxlayout = BoxLayout(
+            orientation = 'vertical',
+            spacing = 10,
+            size_hint_y = None,
+            height = 1000
+        )
+
+        self.boxlayout.bind(minimum_height = self.boxlayout.setter('height'))
+        
+        self.cancel = MDRectangleFlatButton(text = '<',size_hint = (.1,.05),pos_hint={'center_x':0.1, 'center_y':0.8}, on_release = self.btn_cancel)
+        
+        self.boxlayout.add_widget(self.cancel)
+
+        self.scroll.add_widget(self.boxlayout)
+        self.add_widget(self.scroll)
+
+    def on_enter(self):
+        self.boxlayout.clear_widgets()
+        self.create_list()
+        self.list_all()
+
+    def list_all(self):
+        content = db.getAll()
+        for i in content:   
+            self.boxlayout.add_widget(MDRectangleFlatButton(
+                text = i[3],
+                size_hint = (.2,.05),
+                pos_hint = {'center_x':0.5},
+                on_release = self.btn_click
+            ))
+        
+    def btn_click(self,b):
+        print(Window.width,Window.height)
+        print(self.boxlayout.size)
+
+    def btn_cancel(self,b):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'options'
+
+class Excluir(Screen):
+    def __init__(self,**kwargs):
+        super(Excluir,self).__init__(**kwargs)
+        self.theme_cls = ThemeManager()
+        self.theme_cls.primary_palette = "Green"
+        self.create_list()
+        
+    def create_list(self):
+        self.scroll = ScrollView(
+            do_scroll_y = True,
+            do_scroll_x = False,
+            size=(Window.width, Window.height),
+            size_hint = (1,None)
+        )
+        
+        self.boxlayout = BoxLayout(
+            orientation = 'vertical',
+            spacing = 10,
+            size_hint_y = None,
+            height = 1000
+        )
+
+        self.boxlayout.bind(minimum_height = self.boxlayout.setter('height'))
+        
+        self.cancel = MDRectangleFlatButton(text = '<',size_hint = (.1,.05),pos_hint={'center_x':0.1, 'center_y':0.8}, on_release = self.btn_cancel)
+        
+        self.boxlayout.add_widget(self.cancel)
+
+        self.scroll.add_widget(self.boxlayout)
+        self.add_widget(self.scroll)
+
+    def on_enter(self):
+       self.list_all()
+
+    def list_all(self):
+        content = db.getAll()
+        for i in content:   
+            self.boxlayout.add_widget(MDRectangleFlatButton(
+                text = i[3],
+                size_hint = (.2,.05),
+                pos_hint = {'center_x':0.5},
+                on_release = self.btn_click
+            ))
+        
+    def btn_click(self,b):
+        pub.run('delete',b.text)
+        print(f'deleting {b.text}')
+        db.deleteCodeAdmin(b.text)
+
+        self.remove_widget(self.scroll)
+
+        self.create_list()
+
+    def btn_cancel(self,b):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'options'
+
+class ScreenManagement(ScreenManager):
+    def __init__(self, **kwargs):
+        super(ScreenManagement, self).__init__(**kwargs)
+
+class DemoApp(MDApp):
+    def build(self):
+        self.screen_manager = ScreenManagement(transition=SlideTransition())
+        self.screen_manager.add_widget(Options(name = "options"))
+        self.screen_manager.add_widget(Cadastro(name = "cadastro"))
+        self.screen_manager.add_widget(Listar(name = "listar"))
+        self.screen_manager.add_widget(Excluir(name = "excluir"))
+
+        return self.screen_manager
+    
+    def isThreadAlive(self,*a):        
+        if(enviar_pressed[0]):
+            enviar_pressed[0] = 0
+            if(self.is_calling):
+                self.is_calling = False
+                print('is alive is calling')
+                comando = tuple(enviar_pressed[1:6])
+                enviar_pressed.pop(5)
+                enviar_pressed.pop(4)
+                enviar_pressed.pop(3)
+                enviar_pressed.pop(2)
+                enviar_pressed.pop(1)
+                enviar_pressed[0] = 0
+
+                print('comando',comando)
+                pub.run('send_data',comando)
+                
+                inserting_db.append(comando)
+                time.sleep(2)
+        
+    def t(self):
         print('aguardando topico client')
-        comando = sub.run('admin')
+        comando = sub_admin.run('admin')
+        options_btn[0] = 1
+        com.append(comando)
+        cmd[0] = comando
+        if(len(codigo) == 0):
+                codigo.append(comando)
+
         print('aguardando ack')
         notification = plyer.notification.notify(title='Responder', message = comando)
         self.is_calling = True
-        sub.run('ack')
+        sub_ack.run('admin_ack')
         print('ack recebido')
         self.is_calling = False
         print('ack recebido')
         notification = plyer.notification.notify(title='Já foi respondido', message = comando)
-        
+        options_btn[0] = 0
+        options_btn[1] = 0
+        options_btn[2] = 1
+        print('fim thread')
         th = threading.Thread(target = self.t)
 
         th.start()
-
-    def btn_click(self,b):
-        try:
-            int(self.numero.text)
-        except:
-            popupWindow = Popup(title="erro",content = Label(text ="numero invalido"),size_hint=(None,None),size = (400,400))
-            popupWindow.open()
-            return
-
-        if(self.codigo.text == "" or self.nome.text == ""):
-            popupWindow = Popup(title="erro",content = Label(text ="preencha todos os campos"),size_hint=(None,None),size = (400,400))
-            popupWindow.open()
-            return
-
-        if(self.is_calling):
-            self.is_calling = False
-            comando = (self.codigo.text,int(self.numero.text),self.nome.text)
-            pub.run('send_data',comando)
-
-    def isThreadAlive(self,*a):
-        if(self.is_calling):
-            pass
-        else:
-            pass
 
     def on_start(self):
         self.is_calling = False
@@ -94,8 +352,5 @@ class DemoApp(MDApp):
 
         th.start()
         Clock.schedule_interval(self.isThreadAlive,0.2)
-
-    def get_text(self):
-        return self.codigo.text
 
 DemoApp().run()

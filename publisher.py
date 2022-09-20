@@ -40,11 +40,11 @@ def publish(client,topic,data):
 
 def disconnect():
     global global_client
-    global_client.disconnect()
+    #global_client.disconnect()
 
 def run(topic,data):
     global global_client
-    print('inicia publisher')
+    print(f'inicia publisher {topic}' )
     client = connect_mqtt()
     global_client = client
     print('conectancdo publisher mqtt')
