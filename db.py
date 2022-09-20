@@ -120,6 +120,28 @@ def getServer():
     tuples = cur.fetchall()[0]
     return list(tuples)
 
+
+def getServerAdmin():
+    sql = ''' SELECT * FROM servidor
+        '''
+    cur = conn_admin.cursor()
+    cur.execute(sql)
+    
+    tuples = cur.fetchall()[0]
+    return list(tuples)
+
+def setServerAdmin(server_tup):
+    sql = '''UPDATE servidor
+        SET porta = ?,
+            servidor = ?,
+            login = ?,
+            senha = ?
+        WHERE porta = ?'''
+
+    cur = conn_admin.cursor()
+    cur.execute(sql, server_tup)
+    conn_admin.commit()
+
 def setServerBoo(server_tup):
     sql = '''UPDATE servidor
         SET porta = ?,

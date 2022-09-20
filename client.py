@@ -52,6 +52,7 @@ class mainApp(MDApp):
         )
         self.senha = MDTextField(
             text =  server[3],
+            password = True,
             pos_hint = {'center_x':0.5, 'center_y':0.5},
             size_hint_x = None,
             width = 300,

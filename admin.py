@@ -13,6 +13,8 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 
+from kivy.uix.button import Button
+
 from kivy.uix.boxlayout import BoxLayout
 
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
@@ -41,12 +43,18 @@ class Options(Screen):
         self.Cad = MDRectangleFlatButton(text = 'Cadastrar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.6}, on_release = self.btn_Cad)
         self.List = MDRectangleFlatButton(text = 'Listar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.5}, on_release = self.btn_List)
         self.Del = MDRectangleFlatButton(text = 'Excluir',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.4}, on_release = self.btn_Del)
+        self.settings_btn = Button(background_normal = 'settings.png',background_down ='settings.png',size_hint = (0.09,0.1),pos_hint={'center_x':0.9, 'center_y':0.9}, on_release = self.btn_settings)
 
         #self.add_widget(self.Cad)
         self.add_widget(self.List)
         self.add_widget(self.Del)
+        self.add_widget(self.settings_btn)
 
         Clock.schedule_interval(self.clock_verification,0.2)
+
+    def btn_settings(self,b):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'servidor'
 
     def on_enter(self):
         if(len(inserting_db) != 0):
@@ -174,6 +182,74 @@ class Cadastro(Screen):
         self.manager.transition.direction = 'right'
         self.manager.current = 'options'
 
+class Servidor(Screen):
+    def __init__(self,**kwargs):
+        super(Servidor,self).__init__(**kwargs)
+        self.theme_cls = ThemeManager()
+        self.theme_cls.primary_palette = "Green"
+
+        server = db.getServerAdmin()
+
+        self.servidor = MDTextField(
+            text =  server[1],
+            pos_hint = {'center_x':0.5, 'center_y':0.8},
+            size_hint_x = None,
+            width = 300,
+        )
+        self.porta = MDTextField(
+            text =  str(server[0]),
+            pos_hint = {'center_x':0.5, 'center_y':0.7},
+            size_hint_x = None,
+            width = 300,
+        )
+        self.usuario = MDTextField(
+            text = server[2],
+            pos_hint = {'center_x':0.5, 'center_y':0.6},
+            size_hint_x = None,
+            width = 300,
+        )
+        self.senha = MDTextField(
+            text =  server[3],
+            password = True,
+            pos_hint = {'center_x':0.5, 'center_y':0.5},
+            size_hint_x = None,
+            width = 300,
+        )
+
+        self.Enviar = MDRectangleFlatButton(text = 'Enviar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
+        self.Cancelar = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
+
+        self.add_widget(self.servidor)
+        self.add_widget(self.porta)
+        self.add_widget(self.usuario)
+        self.add_widget(self.senha)
+        self.add_widget(self.Enviar)
+        self.add_widget(self.Cancelar)
+
+    def btn_cancel(self,b):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'options'
+
+    def btn_send(self,b):
+        try:
+            int(self.porta.text)
+        except:
+            popupWindow = Popup(title="erro",content = Label(text ="Insira um valor valido para porta"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+            return
+
+        if(self.servidor.text == "" or self.usuario.text == "" or self.senha.text == ""):
+            popupWindow = Popup(title="erro",content = Label(text ="Preencha todos os campos"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+            return
+        
+        print('setando server')
+        servidor_tup = (int(self.porta.text),self.servidor.text,self.usuario.text,self.senha.text,int(self.porta.text))
+        db.setServerAdmin(servidor_tup)
+
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'options' 
+
 class Listar(Screen):
     def __init__(self,**kwargs):
         super(Listar,self).__init__(**kwargs)
@@ -294,6 +370,7 @@ class DemoApp(MDApp):
         self.screen_manager = ScreenManagement(transition=SlideTransition())
         self.screen_manager.add_widget(Options(name = "options"))
         self.screen_manager.add_widget(Cadastro(name = "cadastro"))
+        self.screen_manager.add_widget(Servidor(name = "servidor"))
         self.screen_manager.add_widget(Listar(name = "listar"))
         self.screen_manager.add_widget(Excluir(name = "excluir"))
 
