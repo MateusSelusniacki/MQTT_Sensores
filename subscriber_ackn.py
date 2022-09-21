@@ -3,23 +3,30 @@
 import random
 
 from paho.mqtt import client as mqtt_client
+import time
 
 broker = 'broker.emqx.io'
 port = 1883
 # generate client ID with pub prefix randomly
-client_id = f'python-mqtt-{random.randint(0, 100)}'
+client_id = f'python-mqtt-{2}'
 username = 'emqx'
 password = 'public'
 response = []
 global_client = []
 connected_once = [0]
+rerun = [-1,0]
 topico = []
 clients = dict()
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            print(f"Connected to MQTT Broker! subscriber - topic {topico[0]}")
+            print(f"Connected to MQTT Broker! subscriber - topic {topico[0]}{client_id}")
+            rerun[0] += 1
+            if(rerun[0] == 1):
+                client.disconnect()
+                rerun[0] = -1
+                rerun[1] = 1
         else:
             print("Failed to connect, return code %d\n", rc)
 
@@ -54,8 +61,11 @@ def run(topic):
     print('enviando dado do subscriber')
     subscribe(client,topic)
     client.loop_forever()
-    print('reponse',response)
-    return response[0]
+    if(rerun[1]):
+        rerun[1] = 0
+        run(topic)
+    else:
+        print('reponse',response)
 
 if __name__ == '__main__':
     run('admin')

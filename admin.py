@@ -32,7 +32,7 @@ codigo = []
 com = []
 options_btn = [0,0,0]
 enviar_pressed = [0]
-cmd = [""]
+cmd = []
 inserting_db = []
 
 class Options(Screen):
@@ -130,13 +130,10 @@ class Cadastro(Screen):
         Clock.schedule_interval(self.clock_verification,0.2)
     
     def clock_verification(self,*a):
-        if(cmd[0] != ""):
-            print('entrou')
+        if(len(cmd) != 0):
+            print(type(cmd[0]),cmd[0])
             self.CodControle.text = cmd[0]
-            cmd[0] = ""
-
-    def t(self):
-        pass
+            cmd.pop(0)
     
     def clear_field(self):
         self.IdentfControle.text = ""
@@ -398,21 +395,24 @@ class DemoApp(MDApp):
         
     def t(self):
         print('aguardando topico client')
-        comando = sub_admin.run('admin')
+        sub_admin.run('admin')
+        c = sub_admin.response.pop(0)
         options_btn[0] = 1
-        com.append(comando)
-        cmd[0] = comando
+        com.append(c)
+        print(f'appending cmd {com}')
+        cmd.append(c)
         if(len(codigo) == 0):
-                codigo.append(comando)
+                codigo.append(c)
 
         print('aguardando ack')
-        notification = plyer.notification.notify(title='Responder', message = comando)
+        notification = plyer.notification.notify(title='Responder', message = c)
         self.is_calling = True
         sub_ack.run('admin_ack')
+        sub_ack.response.pop(0)
         print('ack recebido')
         self.is_calling = False
         print('ack recebido')
-        notification = plyer.notification.notify(title='Já foi respondido', message = comando)
+        notification = plyer.notification.notify(title='Já foi respondido', message = c)
         options_btn[0] = 0
         options_btn[1] = 0
         options_btn[2] = 1

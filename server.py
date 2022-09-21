@@ -53,6 +53,7 @@ def client_publish(comando):
     queue.append(comando)
     
     sub_accept_client.run('accept')
+    data = sub_accept_client.response.pop(0)
     
     publisher.run('ackn','ackn')
     is_calling[0] = 0
@@ -63,8 +64,10 @@ def admin_publish(comando):
     
     publisher.run('admin',comando)
     
-    data = sub_send_data.run('send_data')
+    sub_send_data.run('send_data')
     
+    data = sub_send_data.response.pop(0)
+
     parsed_data = data[1:-2].replace(" '",'')
     parsed_data = parsed_data.replace("'","").split(',')
     
@@ -107,14 +110,16 @@ def pulse_verification(pulse):
 def del_thread():
     while True:
         print('esperando delete -------************-------')
-        data_to_del = sub_del.run('delete')
+        sub_del.run('delete')
+
+        data_to_del = sub_del.response.pop(0)
 
         delete.append(data_to_del)
 
 thread_del = threading.Thread(target = del_thread)
 thread_del.start()
 
-pulse_verification("13456")
+pulse_verification("45213")
 
 while True:
     if(len(inserting_db) != 0):

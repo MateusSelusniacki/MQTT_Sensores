@@ -136,11 +136,13 @@ class mainApp(MDApp):
 
     def t(self):
         print('aguardando topico client')
-        comando = sub_client.run('client')
+        sub_client.run('client')
+        comando = sub_client.response.pop(0)
         print('aguardando ack')
         notification = plyer.notification.notify(title='Responder', message = comando)
         self.is_calling = True
         sub_ackn.run('ackn')
+        sub_ackn.response.pop(0)
         print('ack recebido')
         self.is_calling = False
         print('ack recebido')

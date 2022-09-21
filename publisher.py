@@ -8,7 +8,7 @@ from paho.mqtt import client as mqtt_client
 broker = 'broker.emqx.io'
 port = 1883
 # generate client ID with pub prefix randomly
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
+client_id = f'python-mqtt-{8}'
 username = 'emqx'
 password = 'public'
 global global_client
@@ -16,7 +16,7 @@ global global_client
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to MQTT Broker! publisher")
+            print(f"Connected to MQTT Broker! publisher {client_id}")
         else:
             print("Failed to connect, return code %d\n", rc)
 
@@ -37,10 +37,6 @@ def publish(client,topic,data):
     else:
         print(f"Failed to send message to topic {topic}")
     client.disconnect()
-
-def disconnect():
-    global global_client
-    #global_client.disconnect()
 
 def run(topic,data):
     global global_client
