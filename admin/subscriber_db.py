@@ -1,6 +1,5 @@
 # python3.6
-
-import random
+import datetime
 
 from paho.mqtt import client as mqtt_client
 import time
@@ -8,13 +7,11 @@ import time
 broker = 'broker.emqx.io'
 port = 1883
 # generate client ID with pub prefix randomly
-client_id = f'python-mqtt-{1}'
+client_id = f'python-mqtt-{datetime.datetime.now()}'
 username = 'emqx'
 password = 'public'
 response = []
 global_client = []
-connected_once = [0]
-rerun = [-1,0]
 topico = []
 clients = dict()
 
@@ -22,11 +19,6 @@ def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             print(f"Connected to MQTT Broker! subscriber - topic {topico[0]}{client_id}")
-            rerun[0] += 1
-            if(rerun[0] == 1):
-                client.disconnect()
-                rerun[0] = -1
-                rerun[1] = 1
         else:
             print("Failed to connect, return code %d\n", rc)
 
@@ -47,25 +39,19 @@ def subscribe(client: mqtt_client,topic):
     client.subscribe(topic)
     client.on_message = on_message
 
-def disconnect():
-    print('disconect2')
-    global_client[0].disconnect()
-
 def run(topic):
-    connected_once[0] = 0
+    t1 = time.time()
     topico.append(topic)
     print(f'iniciando subscriber - topic {topic}')
     
     client = connect_mqtt()
-    
+    global_client.append(client)
     print('enviando dado do subscriber')
     subscribe(client,topic)
-    client.loop_forever()
-    if(rerun[1]):
-        rerun[1] = 0
-        run(topic)
-    else:
-        print('reponse',response)
+    
+    while(time.time() - t1 < 3):
+        client.loop()
+    print('fim sub_ack')
 
 if __name__ == '__main__':
     run('admin')

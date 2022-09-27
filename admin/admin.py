@@ -9,7 +9,7 @@ from kivy.lang import Builder
 from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
-from kivy.uix.label import Label
+from kivymd.uix.label import MDLabel
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 
@@ -25,7 +25,9 @@ import plyer
 import publisher as pub
 import subscriber_admin as sub_admin
 import subscriber_ack as sub_ack
+import subscriber_db as sub_db
 import threading
+import re
 import time
 
 codigo = []
@@ -40,26 +42,25 @@ class Options(Screen):
         super(Options,self).__init__(**kwargs)
         self.theme_cls = ThemeManager()
         self.theme_cls.primary_palette = "Green"
-        self.Cad = MDRectangleFlatButton(text = 'Cadastrar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.6}, on_release = self.btn_Cad)
-        self.List = MDRectangleFlatButton(text = 'Listar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.5}, on_release = self.btn_List)
-        self.Del = MDRectangleFlatButton(text = 'Excluir',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.4}, on_release = self.btn_Del)
-        self.settings_btn = Button(background_normal = 'settings.png',background_down ='settings.png',size_hint = (0.09,0.1),pos_hint={'center_x':0.9, 'center_y':0.9}, on_release = self.btn_settings)
+        self.Cad = MDRectangleFlatButton(text = 'Cadastrar',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.6}, on_release = self.btn_Cad)
+        self.List = MDRectangleFlatButton(text = 'Listar',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.5}, on_release = self.btn_List)
+        self.Del = MDRectangleFlatButton(text = 'Excluir',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.4}, on_release = self.btn_Del)
+        self.settings_btn = Button(background_normal = 'settings.png',background_down ='settings.png',size_hint = (0.1,0.05),pos_hint={'center_x':0.9, 'center_y':0.9}, on_release = self.btn_settings)
+        self.label_conectado = MDLabel(text = "aguardando servidor",pos_hint={'center_x':1,'center_y':0.02})
+
 
         #self.add_widget(self.Cad)
+        #self.add_widget(self.label_conectado)
         self.add_widget(self.List)
         self.add_widget(self.Del)
         self.add_widget(self.settings_btn)
+        self.add_widget(self.label_conectado)
 
-        Clock.schedule_interval(self.clock_verification,0.2)
+        self.e = Clock.schedule_interval(self.clock_verification,0.2)
 
     def btn_settings(self,b):
         self.manager.transition.direction = 'left'
-        self.manager.current = 'servidor'
-
-    def on_enter(self):
-        if(len(inserting_db) != 0):
-            db.insertCodeAdmin(inserting_db[0])
-            inserting_db.pop(0)
+        self.manager.current = 'servidor'        
 
     def btn_Cad(self,b):
         self.manager.transition.direction = 'left'
@@ -77,9 +78,11 @@ class Options(Screen):
         if(options_btn[0] and not options_btn[1]):
             options_btn[1] = 1
             self.add_widget(self.Cad)
+            self.remove_widget(self.label_conectado)
         if(not options_btn[0] and options_btn[2]):
             options_btn[2] = 0
             self.remove_widget(self.Cad)
+            self.add_widget(self.label_conectado)
 
 class Cadastro(Screen):
     def __init__(self,**kwargs):
@@ -118,6 +121,7 @@ class Cadastro(Screen):
             size_hint_x = None,
             width = 300,
         )
+
         #self.comando = Builder.load_string(text_field)
         self.add_widget(self.IdentfControle)
         self.add_widget(self.CodItem)
@@ -127,7 +131,7 @@ class Cadastro(Screen):
         self.add_widget(self.send)
         self.add_widget(self.cancel)
     
-        Clock.schedule_interval(self.clock_verification,0.2)
+        self.e = Clock.schedule_interval(self.clock_verification,0.2)
     
     def clock_verification(self,*a):
         if(len(cmd) != 0):
@@ -213,8 +217,8 @@ class Servidor(Screen):
             width = 300,
         )
 
-        self.Enviar = MDRectangleFlatButton(text = 'Enviar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
-        self.Cancelar = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
+        self.Enviar = MDRectangleFlatButton(text = 'Enviar',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
+        self.Cancelar = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
 
         self.add_widget(self.servidor)
         self.add_widget(self.porta)
@@ -252,9 +256,6 @@ class Listar(Screen):
         super(Listar,self).__init__(**kwargs)
         self.theme_cls = ThemeManager()
         self.theme_cls.primary_palette = "Green"
-        self.create_list()
-        
-    def create_list(self):
         self.scroll = ScrollView(
             do_scroll_y = True,
             do_scroll_x = False,
@@ -272,20 +273,38 @@ class Listar(Screen):
         self.boxlayout.bind(minimum_height = self.boxlayout.setter('height'))
         
         self.cancel = MDRectangleFlatButton(text = '<',size_hint = (.1,.05),pos_hint={'center_x':0.1, 'center_y':0.8}, on_release = self.btn_cancel)
-        
-        self.boxlayout.add_widget(self.cancel)
+        self.label_carregando = MDLabel(text = "Carregando dados...",pos_hint={'center_x':0.8,'center_y':0.5})
+        self.not_server = MDLabel(text = "Servidor não localizado",pos_hint={'center_x':0.8,'center_y':0.5})
 
+        self.boxlayout.add_widget(self.cancel)
         self.scroll.add_widget(self.boxlayout)
         self.add_widget(self.scroll)
-
-    def on_enter(self):
-        self.boxlayout.clear_widgets()
-        self.create_list()
-        self.list_all()
+        self.add_widget(self.label_carregando)
 
     def list_all(self):
-        content = db.getAll()
-        for i in content:   
+        print('dentro da thread')
+        pub.run('send_db','trash')
+        
+        sub_db.run('server_send_db')
+        
+        if(sub_db.response == []):
+            self.add_widget(self.not_server)
+            return
+        
+        content_raw = sub_db.response.pop(0)
+
+        parsed = re.split('[|(|,|)|]',content_raw.replace(' ','').replace('\'',''))[1:-1]
+
+        content = []
+        i = 0
+        while i < len(parsed):
+            parsed[i] = int(parsed[i])
+            parsed[i+1] = int(parsed[i+1])
+            parsed[i+2] = int(parsed[i+2])
+            content.append(tuple(parsed[i:i+6]))
+            i += 8
+
+        for i in content:
             self.boxlayout.add_widget(MDRectangleFlatButton(
                 text = i[3],
                 size_hint = (.2,.05),
@@ -293,6 +312,17 @@ class Listar(Screen):
                 on_release = self.btn_click
             ))
         
+    def on_enter(self):
+        self.remove_widget(self.not_server)
+        self.remove_widget(self.label_carregando)
+        self.list_all()
+
+    def on_leave(self):
+        self.boxlayout.clear_widgets()
+        self.boxlayout.add_widget(self.cancel)
+        self.add_widget(self.label_carregando)
+        self.remove_widget(self.not_server)
+    
     def btn_click(self,b):
         print(Window.width,Window.height)
         print(self.boxlayout.size)
@@ -306,9 +336,6 @@ class Excluir(Screen):
         super(Excluir,self).__init__(**kwargs)
         self.theme_cls = ThemeManager()
         self.theme_cls.primary_palette = "Green"
-        self.create_list()
-        
-    def create_list(self):
         self.scroll = ScrollView(
             do_scroll_y = True,
             do_scroll_x = False,
@@ -325,19 +352,40 @@ class Excluir(Screen):
 
         self.boxlayout.bind(minimum_height = self.boxlayout.setter('height'))
         
-        self.cancel = MDRectangleFlatButton(text = '<',size_hint = (.1,.05),pos_hint={'center_x':0.1, 'center_y':0.8}, on_release = self.btn_cancel)
-        
-        self.boxlayout.add_widget(self.cancel)
+        self.cancel = MDRectangleFlatButton(text = '<',size_hint = (.1,.05),pos_hint={'center_x':0, 'center_y':0.8}, on_release = self.btn_cancel)
+        self.label_carregando = MDLabel(text = "Carregando dados...",pos_hint={'center_x':0.8,'center_y':0.5})
+        self.not_server = MDLabel(text = "Servidor não localizado",pos_hint={'center_x':0.8,'center_y':0.5})
 
+        self.boxlayout.add_widget(self.cancel)
         self.scroll.add_widget(self.boxlayout)
         self.add_widget(self.scroll)
-
-    def on_enter(self):
-       self.list_all()
+        self.add_widget(self.label_carregando)
 
     def list_all(self):
-        content = db.getAll()
-        for i in content:   
+        print('dentro da thread')
+        pub.run('send_db','trash')
+        
+        sub_db.run('server_send_db')
+        
+        if(sub_db.response == []):
+            self.add_widget(self.not_server)
+            return
+        
+        content_raw = sub_db.response.pop(0)
+
+        parsed = re.split('[|(|,|)|]',content_raw.replace(' ','').replace('\'',''))[1:-1]
+
+        content = []
+        i = 0
+        print("parsed",parsed)
+        while i < len(parsed):
+            parsed[i] = int(parsed[i])
+            parsed[i+1] = int(parsed[i+1])
+            parsed[i+2] = int(parsed[i+2])
+            content.append(tuple(parsed[i:i+6]))
+            i += 8
+
+        for i in content:
             self.boxlayout.add_widget(MDRectangleFlatButton(
                 text = i[3],
                 size_hint = (.2,.05),
@@ -345,14 +393,20 @@ class Excluir(Screen):
                 on_release = self.btn_click
             ))
         
+    def on_enter(self):
+        self.remove_widget(self.label_carregando)
+        self.list_all()
+
+    def on_leave(self):
+        self.boxlayout.clear_widgets()
+        self.boxlayout.add_widget(self.cancel)
+        self.add_widget(self.label_carregando)
+        self.remove_widget(self.not_server)
+        
     def btn_click(self,b):
         pub.run('delete',b.text)
-        print(f'deleting {b.text}')
-        db.deleteCodeAdmin(b.text)
 
-        self.remove_widget(self.scroll)
-
-        self.create_list()
+        self.boxlayout.remove_widget(b)
 
     def btn_cancel(self,b):
         self.manager.transition.direction = 'right'
@@ -362,14 +416,22 @@ class ScreenManagement(ScreenManager):
     def __init__(self, **kwargs):
         super(ScreenManagement, self).__init__(**kwargs)
 
-class DemoApp(MDApp):
+class DemoApp(MDApp):   
     def build(self):
+        self.o = Options(name = "options")
+        self.c = Cadastro(name = "cadastro")
+        self.s = Servidor(name = "servidor")
+        self.l = Listar(name = "listar")
+        self.e = Excluir(name = "excluir")
+        
         self.screen_manager = ScreenManagement(transition=SlideTransition())
-        self.screen_manager.add_widget(Options(name = "options"))
-        self.screen_manager.add_widget(Cadastro(name = "cadastro"))
-        self.screen_manager.add_widget(Servidor(name = "servidor"))
-        self.screen_manager.add_widget(Listar(name = "listar"))
-        self.screen_manager.add_widget(Excluir(name = "excluir"))
+        self.screen_manager.add_widget(self.o)
+        self.screen_manager.add_widget(self.c)
+        self.screen_manager.add_widget(self.s)
+        self.screen_manager.add_widget(self.l)
+        self.screen_manager.add_widget(self.e)
+
+        Window.bind(on_request_close=self.on_request_close)
 
         return self.screen_manager
     
@@ -392,7 +454,7 @@ class DemoApp(MDApp):
                 
                 inserting_db.append(comando)
                 time.sleep(2)
-        
+
     def t(self):
         print('aguardando topico client')
         sub_admin.run('admin')
@@ -405,21 +467,22 @@ class DemoApp(MDApp):
                 codigo.append(c)
 
         print('aguardando ack')
-        notification = plyer.notification.notify(title='Responder', message = c)
         self.is_calling = True
         sub_ack.run('admin_ack')
         sub_ack.response.pop(0)
         print('ack recebido')
         self.is_calling = False
         print('ack recebido')
-        notification = plyer.notification.notify(title='Já foi respondido', message = c)
         options_btn[0] = 0
         options_btn[1] = 0
         options_btn[2] = 1
-        print('fim thread')
-        th = threading.Thread(target = self.t)
+        
+        if(c != 'pitanganamadrugadaerrada'):
+            print('rethread')
+            th = threading.Thread(target = self.t)
 
-        th.start()
+            th.start()
+        print('fim thread')
 
     def on_start(self):
         self.is_calling = False
@@ -428,6 +491,21 @@ class DemoApp(MDApp):
         th = threading.Thread(target = self.t)
 
         th.start()
+
         Clock.schedule_interval(self.isThreadAlive,0.2)
+
+    def on_request_close(self, *args):
+        self.o.e.cancel()
+        self.c.e.cancel()
+
+        if(len(sub_admin.global_client) != 0):
+            sub_admin.response.append('pitanganamadrugadaerrada')
+            sub_admin.global_client[0].disconnect()
+        time.sleep(0.5)
+        if(len(sub_ack.global_client) != 0):
+            sub_ack.response.append('pitanganamadrugadaerrada')
+            sub_ack.global_client[0].disconnect()
+        time.sleep(0.5)
+        return True
 
 DemoApp().run()

@@ -17,7 +17,6 @@ import time
 from functools import partial
 import plyer
 import db
-
 # to change the kivy default settings we use this module config
 from kivy.config import Config
      
@@ -30,7 +29,7 @@ was_thread_alive = [0]
 class mainApp(MDApp):
     def build(self):
         self.screen = Screen()
-        server = db.getServer()
+        server = db.server
 
         self.servidor = MDTextField(
             text =  server[1],
@@ -59,7 +58,7 @@ class mainApp(MDApp):
         )
         self.send = MDRectangleFlatButton(text = 'Enviar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
         self.cancel = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
-        self.settings = Button(background_normal = 'settings.png',background_down ='settings.png',size_hint = (0.09,0.1),pos_hint={'center_x':0.9, 'center_y':0.9}, on_release = self.btn_settings)
+        self.settings = Button(background_normal = 'settings.png',background_down ='settings.png',size_hint = (0.1,0.05),pos_hint={'center_x':0.9, 'center_y':0.9}, on_release = self.btn_settings)
 
         self.b = MDRectangleFlatButton(
             text = "responder",
@@ -135,18 +134,17 @@ class mainApp(MDApp):
         print('cliente: enviando accept')
 
     def t(self):
-        print('aguardando topico client')
+        print('1')
         sub_client.run('client')
-        comando = sub_client.response.pop(0)
-        print('aguardando ack')
-        notification = plyer.notification.notify(title='Responder', message = comando)
+        print('2')
+        comando = sub_client.response[0]
+        print(comando,' 3')
         self.is_calling = True
+        self.b.text = comando
         sub_ackn.run('ackn')
-        sub_ackn.response.pop(0)
-        print('ack recebido')
+        print('4',sub_ackn.response)
+        print('5')
         self.is_calling = False
-        print('ack recebido')
-        notification = plyer.notification.notify(title='Já foi respondido', message = comando)
         
         th = threading.Thread(target = self.t)
 
@@ -170,9 +168,5 @@ class mainApp(MDApp):
 
         th.start()
         Clock.schedule_interval(self.isThreadAlive,0.2)
-    
-    def on_stop(self):
-        pub.disconnect()
-        print('fechando')
         
 mainApp().run()

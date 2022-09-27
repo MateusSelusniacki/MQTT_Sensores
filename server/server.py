@@ -7,6 +7,7 @@ from schedule import every, repeat, run_pending
 
 import publisher
 import subscriber_accept_client as sub_accept_client
+import subscriber_send_db as sub_db
 import subscriber_send_data as sub_send_data
 import subscriber_delete as sub_del
 
@@ -16,6 +17,8 @@ alive_thread = []
 inserting_db = []
 delete = []
 is_calling = [0]
+temp_global = []
+db2send = []
 
 TEMPO = 3
 
@@ -48,14 +51,17 @@ def job():
 def client_publish(comando):
     is_calling[0] = 1
 
+    print(comando,'1')
     publisher.run('client',comando)
     
     queue.append(comando)
-    
+    print('2')
     sub_accept_client.run('accept')
+    print('3')
     data = sub_accept_client.response.pop(0)
-    
+    print('4')
     publisher.run('ackn','ackn')
+    print('5')
     is_calling[0] = 0
 
 def admin_publish(comando):
@@ -77,17 +83,19 @@ def admin_publish(comando):
     is_calling[0] = 0
 
 def on_signal(signal,c_a):
+    print(signal)
     if(c_a == 'a'):
         print('admin')
         admin_publish(signal)
     else:
-        print('client')
+        print('client',signal)
         client_publish(signal)
     
     alive_thread.pop(0)
 
 def rasp_sender(signal):
-    command = db.getCode(signal)
+    #command = db.getCode(signal)--------------------------------------------------------------------------------------
+    print(f'signal --------{signal}-{type(signal)}-{command}')
     if(command == ''):
         print('a')
         c_a = 'a'
@@ -105,23 +113,58 @@ def pulse_verification(pulse):
             return
 
     queue.append((pulse,datetime.datetime.now()))
-    rasp_sender(pulse)
+    temp_global.append(pulse)
+    #rasp_sender(pulse)---------------------------------------------------------------------------------------------------
 
 def del_thread():
-    while True:
-        print('esperando delete -------************-------')
-        sub_del.run('delete')
+    sub_del.run('delete')
+    print('delete recebido iniciando a deleção')
 
-        data_to_del = sub_del.response.pop(0)
+    data_to_del = sub_del.response.pop(0)
+    
+    print('data_to_del',data_to_del)
 
-        delete.append(data_to_del)
+    delete.append(data_to_del)
+    th_del = threading.Thread(target = del_thread())
+    th_del.start()
+
+def send_db():
+    sub_db.run('send_db')
+    print('testando send_db---------------****************-------------------****************')
+    print('testando send_db---------------****************-------------------****************')
+    if(len(sub_db.response) > 0):
+        trash = sub_db.response.pop(0)
+
+    db2send.append(1)
+    th = threading.Thread(target = send_db)
+    th.start()
 
 thread_del = threading.Thread(target = del_thread)
 thread_del.start()
 
-pulse_verification("45213")
+thread_send_db = threading.Thread(target = send_db)
+thread_send_db.start()
+
+def input_loop():
+    while True:
+        pulse_verification(input())
+
+thread_del = threading.Thread(target = input_loop).start()
 
 while True:
+    if(len(temp_global) != 0):
+        signal = temp_global.pop(0)
+        print('signal on while true',signal)
+        command = db.getCode(signal)
+        if(command == ''):
+            print('a')
+            c_a = 'a'
+        else:
+            print('c')
+            c_a = 'c'
+            
+        th = threading.Thread(target = on_signal,args=(signal,c_a))
+        thread_queue.append(th)
     if(len(inserting_db) != 0):
         db.insertCode(inserting_db[0])
         inserting_db.pop(0)
@@ -129,6 +172,10 @@ while True:
         print(f'deleting {delete[0]}')
         db.deleteCode(delete[0])
         delete.pop(0)
+    if(len(db2send) != 0):
+        print('sending')
+        db2send.pop(0)
+        publisher.run('server_send_db',db.get_all())
     time.sleep(1)
 
 '''
@@ -161,13 +208,29 @@ rfdevice.enable_rx()
 timestamp = None
 logging.info("Listening for codes on GPIO " + str(args.gpio))
 while True:
+    if(len(temp_global) != 0):
+        signal = temp_global.pop(0)
+        command = db.getCode(signal)
+        if(command == ''):
+            print('a')
+            c_a = 'a'
+        else:
+            print('c')
+            c_a = 'c'
+            
+        th = threading.Thread(target = on_signal,args=(signal,c_a))
+        thread_queue.append(th)
     if(len(inserting_db) != 0):
         db.insertCode(inserting_db[0])
         inserting_db.pop(0)
     if(len(delete) != 0):
-        print(f'deleting {delete[0]}|')
+        print(f'deleting {delete[0]}')
         db.deleteCode(delete[0])
         delete.pop(0)
+    if(len(db2send) != 0):
+        print('sending')
+        db2send.pop(0)
+        publisher.run('server_send_db',db.get_all())
     if rfdevice.rx_code_timestamp != timestamp:
         timestamp = rfdevice.rx_code_timestamp
         logging.info(str(rfdevice.rx_code) +
