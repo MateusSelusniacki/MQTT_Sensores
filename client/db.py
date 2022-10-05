@@ -52,7 +52,7 @@ def setServerBoo(server_tup):
     cur.execute(sql, server_tup)
     conn_client.commit()
     conn_client.close()
-
+    
 conn = create_connection('Cliente.db')
 
 print('deveria criar essa tabela------------------------------------------------------------')

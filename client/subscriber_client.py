@@ -4,7 +4,7 @@ import datetime
 from paho.mqtt import client as mqtt_client
 import time
 
-broker = 'broker.emqx.io'
+broker = 'test.mosquitto.org'
 port = 1883
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{datetime.datetime.now()}'
@@ -13,18 +13,17 @@ password = 'public'
 response = []
 global_client = []
 connected_once = [0]
-rerun = [-1,0]
 topico = []
 clients = dict()
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            pass
-            #print(f"Connected to MQTT Broker! subscriber - topic {topico[0]}{client_id}")
+            response = []
+            print(f"Connected to MQTT Broker! subscriber - topic {topico[0]}{client_id}")
         else:
             pass
-            #print("Failed to connect, return code %d\n", rc)
+            print("Failed to connect, return code %d\n", rc)
 
     client = mqtt_client.Client(client_id)
     client.username_pw_set(username, password)
@@ -34,9 +33,9 @@ def connect_mqtt() -> mqtt_client:
     return client
 
 def subscribe(client: mqtt_client,topic):
-    #print('subscribe subscriber')
+    print('subscribe subscriber')
     def on_message(client, userdata, msg):
-        #print(f'publicação recebida - topico: {topic} {str(msg.payload)}')
+        print(f'publicação recebida - topico: {topic} {str(msg.payload)}')
         response.append(str(msg.payload.decode()[10:]))
         client.disconnect()
 
@@ -45,13 +44,13 @@ def subscribe(client: mqtt_client,topic):
 
 def run(topic):
     topico.append(topic)
-    #print(f'iniciando subscriber - topic {topic}')
+    print(f'iniciando subscriber - topic {topic}')
     
     client = connect_mqtt()
-    #print('enviando dado do subscriber')
+    print('enviando dado do subscriber')
     subscribe(client,topic)
     client.loop_forever()
-    #print(f'final subscriber {topic}')
+    print(f'final subscriber {topic}')
 
 if __name__ == '__main__':
     run('admin')

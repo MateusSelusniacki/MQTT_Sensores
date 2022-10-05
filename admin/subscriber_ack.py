@@ -4,7 +4,7 @@ import datetime
 from paho.mqtt import client as mqtt_client
 import time
 
-broker = 'broker.emqx.io'
+broker = 'test.mosquitto.org'
 port = 1883
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{datetime.datetime.now()}'
@@ -18,6 +18,7 @@ clients = dict()
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
+            response = []
             print(f"Connected to MQTT Broker! subscriber - topic {topico[0]}{client_id}")
         else:
             print("Failed to connect, return code %d\n", rc)
@@ -44,6 +45,7 @@ def disconnect():
     global_client[0].disconnect()
 
 def run(topic):
+    t1 = time.time()
     topico.append(topic)
     print(f'iniciando subscriber - topic {topic}')
     
@@ -51,7 +53,6 @@ def run(topic):
     global_client.append(client)
     print('enviando dado do subscriber')
     subscribe(client,topic)
-    
     client.loop_forever()
 
 if __name__ == '__main__':

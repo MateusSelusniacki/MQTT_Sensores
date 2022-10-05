@@ -2,13 +2,14 @@
 
 import random
 import time
+import datetime
 
 from paho.mqtt import client as mqtt_client
 
-broker = 'broker.emqx.io'
+broker = 'test.mosquitto.org'
 port = 1883
 # generate client ID with pub prefix randomly
-client_id = f'python-mqtt-{8}'
+client_id = f'python-mqtt-{datetime.datetime.now()}'
 username = 'emqx'
 password = 'public'
 global global_client
@@ -33,7 +34,8 @@ def publish(client,topic,data):
     # result: [0, 1]
     status = result[0]
     if status == 0:
-        print(f"Send `{msg}` to topic `{topic}`")
+        #print(f"Send `{msg}` to topic `{topic}`")
+        pass
     else:
         print(f"Failed to send message to topic {topic}")
     client.disconnect()
@@ -49,6 +51,6 @@ def run(topic,data):
     publish(client,topic,data)
 
 if __name__ == '__main__':
-    topic = 'client'
+    topic = 'sub_press_btnsec'
     data = 'dado'
     run(topic,data)
