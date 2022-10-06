@@ -12,7 +12,7 @@ def create_table():
     except:
         pass
 
-def create_connection(c_host,c_user,c_password,c_database):
+def create_connection(c_port,c_host,c_user,c_password):
     """ create a database connection to the SQLite database
         specified by db_file
     :param db_file: database file
@@ -22,13 +22,14 @@ def create_connection(c_host,c_user,c_password,c_database):
         host=c_host,
         user=c_user,
         password=c_password,
-        database=c_database
+        database="tblcontroles"
     )
 
     return mydb
 
-def insertCode(host,user,password,table,codigo): 
-    conn = create_connection(host,user,password,table)
+def insertCode(port,host,user,password,codigo): 
+    print(port,host,user,password)
+    conn = create_connection(port,host,user,password)
     print(f'inserindo {codigo} no banco')
     try:
         sql = ''' INSERT INTO tblControles(IdentfControle,CodItem,NomeControle,DescricaoControle,CodControle)
@@ -39,10 +40,10 @@ def insertCode(host,user,password,table,codigo):
 
         return cur.lastrowid
     except:
-        pass
+        return -1
 
-def getCode(host,user,password,table,codigo):
-    conn = create_connection(host,user,password,table)
+def getCode(port,host,user,password,codigo):
+    conn = create_connection(port,host,user,password)
     try:
         sql = ''' SELECT * FROM tblControles
                 WHERE CodControle = %s
@@ -53,11 +54,12 @@ def getCode(host,user,password,table,codigo):
         tuples = cur.fetchall()[0][3]
         return tuples
     except:
-        return ""
+        return -1
 
-def get_row_byCode(host,user,password,table,codigo):
-    conn = create_connection(host,user,password,table)
+def get_row_byCode(port,host,user,password,codigo):
     try:
+        conn = create_connection(port,host,user,password)
+
         sql = ''' SELECT * FROM tblControles Where CodControle = %s
                 '''
         cur = conn.cursor()
@@ -66,44 +68,56 @@ def get_row_byCode(host,user,password,table,codigo):
         tuples = cur.fetchall()[0]
         return tuples
     except:
-        print('except')
-        return ""
-
-def get_all(host,user,password,table):
-    conn = create_connection(host,user,password,table)
-    sql = ''' SELECT * FROM tblControles
-            '''
-    cur = conn.cursor()
-    cur.execute(sql)
-    
-    tuples = cur.fetchall()
-    return tuples
-
-def updateCode(host,user,password,table,codigo):
-    conn = create_connection(host,user,password,table)
-    sql = '''UPDATE tblControles
-        SET IdentfControle = %s,
-            CodItem = %s,
-            NomeControle = %s,
-            DescricaoControle = %s
-        WHERE CodControle = %s'''
-    cur = conn.cursor()
-    cur.execute(sql, codigo)
-    conn.commit()
-
-    return cur.lastrowid
-
-
-def deleteCode(host,user,password,table,codigo):
-    conn = create_connection(host,user,password,table)
-    print('deletando')
+        print('não encontrado')
+        return -1
+def get_all(port,host,user,password):
     try:
-        sql = '''DELETE FROM tblControles
-            WHERE NomeControle = %s'''
+        conn = create_connection(port,host,user,password)
+        sql = ''' SELECT * FROM tblControles
+                '''
         cur = conn.cursor()
-        cur.execute(sql, (codigo,))
+        cur.execute(sql)
+        
+        tuples = cur.fetchall()
+        return tuples
+    except:
+        print('except get all')
+        return -1
+
+def updateCode(port,host,user,password,codigo):
+    try:
+        conn = create_connection(port,host,user,password)
+        sql = '''UPDATE tblControles
+            SET IdentfControle = %s,
+                CodItem = %s,
+                NomeControle = %s,
+                DescricaoControle = %s
+            WHERE CodControle = %s'''
+        cur = conn.cursor()
+        cur.execute(sql, codigo)
         conn.commit()
 
         return cur.lastrowid
     except:
-        pass
+        return -1
+
+
+def deleteCode(port,host,user,password,codigo):
+    conn = create_connection(port,host,user,password)
+    print('deletando')
+    try:
+        print('1d')
+        sql = '''DELETE FROM tblControles
+            WHERE NomeControle = %s'''
+        print('2d')
+        cur = conn.cursor()
+        sdfadf()
+        print('3d',codigo)
+        cur.execute(sql, (codigo,))
+        print('4d')
+        conn.commit()
+        print('deletado')
+        return cur.lastrowid
+    except:
+        print('except')
+        return -1

@@ -35,15 +35,18 @@ def getServerAdmin():
     return list(tuples)
 
 def setServerAdmin(server_tup):
+    print('setserver',server_tup)
     sql = '''UPDATE servidor
         SET porta = ?,
             servidor = ?,
             login = ?,
             senha = ?
-        WHERE porta = ?'''
+        WHERE id = 1'''
 
     cur = conn_admin.cursor()
     cur.execute(sql, server_tup)
     conn_admin.commit()
 
 conn_admin = create_connection('Admin.db')
+
+setServerAdmin((123,'servidor','login','senha'))

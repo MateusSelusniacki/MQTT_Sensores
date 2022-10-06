@@ -5,10 +5,10 @@ from paho.mqtt import client as mqtt_client
 import time
 import threading
 
-broker = 'test.mosquitto.org'
+broker = None
 port = 1883
 # generate client ID with pub prefix randomly
-client_id = f'python-mqtt-{datetime.datetime.now()}'
+client_id = f'python-mqtt-eccept{datetime.datetime.now()}'
 username = 'emqx'
 password = 'public'
 response = []

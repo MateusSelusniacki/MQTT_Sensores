@@ -6,7 +6,7 @@ import time
 #import publisher
 import threading
 
-broker = 'test.mosquitto.org'
+broker = None
 port = 1883
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-inserting{datetime.datetime.now()}'

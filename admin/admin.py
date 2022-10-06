@@ -29,6 +29,7 @@ import subscriber_admin as sub_admin
 import subscriber_ack as sub_ack
 import subscriber_db as sub_db
 import subscriber_cont_press as sub_press
+import subscriber_deleted as sub_deleted
 
 import threading
 import re
@@ -285,7 +286,7 @@ class Servidor(Screen):
             return
         
         print('setando server')
-        servidor_tup = (int(self.porta.text),self.servidor.text,self.usuario.text,self.senha.text,int(self.porta.text))
+        servidor_tup = (int(self.porta.text),self.servidor.text,self.usuario.text,self.senha.text)
         db.setServerAdmin(servidor_tup)
 
         self.manager.transition.direction = 'right'
@@ -323,6 +324,7 @@ class Listar(Screen):
 
     def list_all(self):
         print('dentro da thread')
+        server = db.getServerAdmin()
         pub.run('send_db','trash')
         
         sub_db.run('server_send_db')
@@ -440,14 +442,17 @@ class Excluir(Screen):
         self.boxlayout.add_widget(self.cancel)
         self.add_widget(self.label_carregando)
         self.remove_widget(self.not_server)
-    
-    def server_toString(self):
-        server = getServerAdmin()
-        server_string = str(server[0]) + "," + server[1] + "," + server[2] + "," + server[3] + "," 
-        return server_string
 
     def btn_click(self,b):
-        pub.run('delete',server_toString() + b.text)
+        pub.run('delete',b.text)
+        sub_deleted.run("deleted_s_o_n0809")
+        
+        resp = sub_deleted.response.pop(0)
+        print('respo',resp)
+        if(resp == "-1"):
+            popupWindow = Popup(title="erro",content = Label(text =f"Erro ao deletar {b.text}"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+            return
 
         self.boxlayout.remove_widget(b)
 
@@ -493,7 +498,7 @@ class DemoApp(MDApp):
             enviar_pressed[0] = 0
 
             print('comando',comando)
-            pub.run('send_data',comando)
+            pub.run('send_data',str(comando))
             
     def t(self):
         print('aguardando topico admin')
@@ -510,7 +515,9 @@ class DemoApp(MDApp):
         sub_ack.run('admin_ack')
 
         if(len(sub_ack.response) == 0):
-            print('falha ao cadastrar')
+            popupWindow = Popup(title="erro",content = Label(text ="Falha ao cadastrar, Servidor não respondeu"),size_hint=(None,None),size = (400,400))
+            popupWindow.open()
+
             threading.Thread(target = self.t).start()
             self.is_calling = False
             options_btn[0] = 0

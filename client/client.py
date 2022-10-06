@@ -39,27 +39,31 @@ class mainApp(MDApp):
             hint_text =  "identificador do Controle",
             pos_hint = {'center_x':0.5, 'center_y':0.8},
             size_hint_x = None,
-            width = 300
+            width = 300,
+            disabled = True
         )
         
         self.CodItem = MDTextField(
             hint_text =  "Codigo do Item",
             pos_hint = {'center_x':0.5, 'center_y':0.7},
             size_hint_x = None,
-            width = 300
+            width = 300,
+            disabled = True
         )
         
         self.NomeControle = MDTextField(
             hint_text =  "Nome",
             pos_hint = {'center_x':0.5, 'center_y':0.6},
             size_hint_x = None,
-            width = 300
+            width = 300,
+            disabled = True
         )
         self.Descricao = MDTextField(
             hint_text =  "Descrição",
             pos_hint = {'center_x':0.5, 'center_y':0.5},
             size_hint_x = None,
-            width = 300
+            width = 300,
+            disabled = True
         )
         
         self.CodControle = MDTextField(
