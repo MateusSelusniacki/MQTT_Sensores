@@ -7,7 +7,7 @@ class cfg:
         self.file = self.readCfgFile()
         self.broker = self.file[0].replace('broker = ','').replace('\n','')
         self.host = self.file[1].replace('host = ','').replace('\n','')
-        self.port = self.file[2].replace('port = ','').replace('\n','')
+        self.port = int(self.file[2].replace('port = ','').replace('\n',''))
         self.user = self.file[3].replace('user = ','').replace('\n','')
         self.password = self.file[4].replace('password = ','').replace('\n','')
 

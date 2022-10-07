@@ -153,23 +153,26 @@ threading.Thread(target = client_handler).start()
 def client_pulse_VerifyQueue(pulse):
     if(pulse not in client_queue):
         print('pulse pro cliente',pulse)
-        client_queue.append(db.get_row_byCode(3306,"localhost","root","dell",pulse))
+        client_queue.append(db.get_row_byCode(config.port,config.host,config.user,config.password,pulse))
 
 #---------------------------------------------------------------------------------#
 
 def adminorclient(pulse):
-    cmd = db.getCode(3306,"localhost","root","dell",pulse)
-    if(cmd != ''):
+    cmd = db.getCode(config.port,config.host,config.user,config.password,pulse)
+    print("pulse/cmd",pulse,cmd)
+    if(str(cmd) != '-1'):
         client_pulse_VerifyQueue(pulse)
+        cmd = ''
 
 def parse_cfg(cg):
     return cg.split(',')
 
 if(TESTE):
-    '''adminorclient('1')
+    adminorclient('3')
+    adminorclient('1')
     adminorclient('2')
     adminorclient('3')
-    adminorclient('11112222')'''
+    adminorclient('11112222')
     while True:
         if(len(inserting_db) != 0):
             parsed = inserting_db.pop(0)

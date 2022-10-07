@@ -5,7 +5,7 @@ import time
 
 from paho.mqtt import client as mqtt_client
 
-broker = 'test.mosquitto.org'
+broker = None
 port = 1883
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{8}'

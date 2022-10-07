@@ -31,6 +31,15 @@ import subscriber_db as sub_db
 import subscriber_cont_press as sub_press
 import subscriber_deleted as sub_deleted
 
+broker_db = db.getServerAdmin()[0]
+print('broker_db',broker_db)
+pub.broker = broker_db
+sub_admin.broker = broker_db
+sub_ack.broker = broker_db
+sub_db.broker = broker_db
+sub_press.broker = broker_db
+sub_deleted.broker = broker_db
+
 import threading
 import re
 import time
@@ -232,39 +241,16 @@ class Servidor(Screen):
 
         server = db.getServerAdmin()
 
-        self.servidor = MDTextField(
-            text =  server[1],
+        self.broker = MDTextField(
+            text =  server[0],
             pos_hint = {'center_x':0.5, 'center_y':0.8},
             size_hint_x = None,
             width = 300,
         )
-        self.porta = MDTextField(
-            text =  str(server[0]),
-            pos_hint = {'center_x':0.5, 'center_y':0.7},
-            size_hint_x = None,
-            width = 300,
-        )
-        self.usuario = MDTextField(
-            text = server[2],
-            pos_hint = {'center_x':0.5, 'center_y':0.6},
-            size_hint_x = None,
-            width = 300,
-        )
-        self.senha = MDTextField(
-            text =  server[3],
-            password = True,
-            pos_hint = {'center_x':0.5, 'center_y':0.5},
-            size_hint_x = None,
-            width = 300,
-        )
-
         self.Enviar = MDRectangleFlatButton(text = 'Enviar',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
         self.Cancelar = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.35,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
 
-        self.add_widget(self.servidor)
-        self.add_widget(self.porta)
-        self.add_widget(self.usuario)
-        self.add_widget(self.senha)
+        self.add_widget(self.broker)
         self.add_widget(self.Enviar)
         self.add_widget(self.Cancelar)
 
@@ -273,20 +259,13 @@ class Servidor(Screen):
         self.manager.current = 'options'
 
     def btn_send(self,b):
-        try:
-            int(self.porta.text)
-        except:
-            popupWindow = Popup(title="erro",content = Label(text ="Insira um valor valido para porta"),size_hint=(None,None),size = (400,400))
-            popupWindow.open()
-            return
-
-        if(self.servidor.text == "" or self.usuario.text == "" or self.senha.text == ""):
+        if(self.broker.text == ""):
             popupWindow = Popup(title="erro",content = Label(text ="Preencha todos os campos"),size_hint=(None,None),size = (400,400))
             popupWindow.open()
             return
         
         print('setando server')
-        servidor_tup = (int(self.porta.text),self.servidor.text,self.usuario.text,self.senha.text)
+        servidor_tup = (self.broker.text)
         db.setServerAdmin(servidor_tup)
 
         self.manager.transition.direction = 'right'

@@ -1,8 +1,5 @@
 import sqlite3
-try:
-    import mysql.connector
-except:
-    import mariadb
+import mariadb
 #conn = create_connection("localhost","root","dell","tblcontroles")
 def create_table():
     con = sqlite3.connect("System.db")
@@ -21,28 +18,18 @@ def create_connection(c_port,c_host,c_user,c_password):
     :param db_file: database file
     :return: Connection object or None
     """
-    try:
-        mydb = mysql.connector.connect(
-            host=c_host,
-            user=c_user,
-            password=c_password,
-            database="tblcontroles"
-        )
-
-        return mydb
-    except:
-        print('não conectado ao banco de dados mysql')
-    
+    print('port',c_port,type(c_port),'user',c_user,type(c_user),'host',c_host,type(c_host),'password',c_password,type(c_password))
     try:
         conn = mariadb.connect(
             host=c_host,
+            port=c_port,
             user=c_user,
             password=c_password,
             database="tblcontroles"
 
         )
-    except:
-        print("não conectado mariadb")
+    except mariadb.Error as e:
+        print(f"Error: {e}")
 
 def insertCode(port,host,user,password,codigo): 
     print(port,host,user,password)
@@ -50,7 +37,7 @@ def insertCode(port,host,user,password,codigo):
     print(f'inserindo {codigo} no banco')
     try:
         sql = ''' INSERT INTO tblControles(IdentfControle,CodItem,NomeControle,DescricaoControle,CodControle)
-                VALUES(%s,%s,%s,%s,%s) '''
+                VALUES(?,?,?,?,?) '''
         cur = conn.cursor()
         cur.execute(sql, codigo)
         conn.commit()
@@ -63,7 +50,7 @@ def getCode(port,host,user,password,codigo):
     conn = create_connection(port,host,user,password)
     try:
         sql = ''' SELECT * FROM tblControles
-                WHERE CodControle = %s
+                WHERE CodControle = ?
                 '''
         cur = conn.cursor()
         cur.execute(sql, (codigo,))
@@ -77,7 +64,7 @@ def get_row_byCode(port,host,user,password,codigo):
     try:
         conn = create_connection(port,host,user,password)
 
-        sql = ''' SELECT * FROM tblControles Where CodControle = %s
+        sql = ''' SELECT * FROM tblControles Where CodControle = ?
                 '''
         cur = conn.cursor()
         cur.execute(sql, (codigo,))
@@ -105,11 +92,11 @@ def updateCode(port,host,user,password,codigo):
     try:
         conn = create_connection(port,host,user,password)
         sql = '''UPDATE tblControles
-            SET IdentfControle = %s,
-                CodItem = %s,
-                NomeControle = %s,
-                DescricaoControle = %s
-            WHERE CodControle = %s'''
+            SET IdentfControle = ?,
+                CodItem = ?,
+                NomeControle = ?,
+                DescricaoControle = ?
+            WHERE CodControle = ?'''
         cur = conn.cursor()
         cur.execute(sql, codigo)
         conn.commit()
@@ -125,7 +112,7 @@ def deleteCode(port,host,user,password,codigo):
     try:
         print('1d')
         sql = '''DELETE FROM tblControles
-            WHERE NomeControle = %s'''
+            WHERE NomeControle = ?'''
         print('2d')
         cur = conn.cursor()
         sdfadf()
@@ -138,5 +125,3 @@ def deleteCode(port,host,user,password,codigo):
     except:
         print('except')
         return -1
-
-print(create_connection(3306,"localhost","root","dell"))

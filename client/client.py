@@ -25,15 +25,18 @@ from kivy.config import Config
 # you can use 0 or 1 && True or False
 Config.set('graphics', 'resizable', True)
 
+broker_db = db.getServer()[0]
+
+pub.broker = broker_db
+sub_client.broker = broker_db
+sub_ackn.broker = broker_db
+sub_ackn2.broker = broker_db
+
+print('broker_db',broker_db)
+
 was_thread_alive = [0]
 
 class mainApp(MDApp):
-    def set_cfg(self):
-        self.host = db.server[1]
-        self.porta = db.server[0]
-        self.user = db.server[2]
-        self.password = db.server[3]
-
     def create_main_widget(self):
         self.IdentfControle = MDTextField(
             hint_text =  "identificador do Controle",
@@ -88,30 +91,11 @@ class mainApp(MDApp):
         
     def create_server_widgets(self):
         self.server = db.server
-        self.servidor = MDTextField(
-            text =  self.server[1],
+        self.broker = MDTextField(
+            text =  self.server[0],
             pos_hint = {'center_x':0.5, 'center_y':0.8},
             size_hint_x = None,
-            width = 300,
-        )
-        self.porta = MDTextField(
-            text =  str(self.server[0]),
-            pos_hint = {'center_x':0.5, 'center_y':0.7},
-            size_hint_x = None,
-            width = 300,
-        )
-        self.usuario = MDTextField(
-            text = self.server[2],
-            pos_hint = {'center_x':0.5, 'center_y':0.6},
-            size_hint_x = None,
-            width = 300,
-        )
-        self.senha = MDTextField(
-            text =  self.server[3],
-            password = True,
-            pos_hint = {'center_x':0.5, 'center_y':0.5},
-            size_hint_x = None,
-            width = 300,
+            width = 300
         )
         self.send = MDRectangleFlatButton(text = 'Enviar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.3}, on_release = self.btn_send)
         self.cancel = MDRectangleFlatButton(text = 'Cancelar',size_hint = (.15,.05),pos_hint={'center_x':0.5, 'center_y':0.2}, on_release = self.btn_cancel)
@@ -123,11 +107,8 @@ class mainApp(MDApp):
 
         self.screen.add_widget(self.label_falha)
 
-        if(self.server[4] == 0):
-            self.screen.add_widget(self.servidor)
-            self.screen.add_widget(self.porta)
-            self.screen.add_widget(self.usuario)
-            self.screen.add_widget(self.senha)
+        if(self.server[1] == 0):
+            self.screen.add_widget(self.broker)
             self.screen.add_widget(self.send)
             self.screen.add_widget(self.cancel)
         else:
@@ -138,10 +119,7 @@ class mainApp(MDApp):
     
     def set_cad(self):
         print('set_cad')
-        self.screen.add_widget(self.servidor)
-        self.screen.add_widget(self.porta)
-        self.screen.add_widget(self.usuario)
-        self.screen.add_widget(self.senha)
+        self.screen.add_widget(self.broker)
         self.screen.add_widget(self.send)
         self.screen.add_widget(self.cancel)
         self.screen.remove_widget(self.IdentfControle)
@@ -156,32 +134,20 @@ class mainApp(MDApp):
 
     def remove_cad(self):
         print('remove_cad')
-        self.screen.remove_widget(self.servidor)
-        self.screen.remove_widget(self.porta)
-        self.screen.remove_widget(self.usuario)
-        self.screen.remove_widget(self.senha)
+        self.screen.remove_widget(self.broker)
         self.screen.remove_widget(self.send)
         self.screen.remove_widget(self.cancel)
         self.screen.add_widget(self.settings)
-        self.screen.add_widget(self.label_falha)
+        #self.screen.add_widget(self.label_falha)
 
     def btn_send(self,b):
-        try:
-            int(self.porta.text)
-        except:
-            popupWindow = Popup(title="erro",content = Label(text ="Insira um valor valido para porta"),size_hint=(None,None),size = (400,400))
-            popupWindow.open()
-            return
-
-        if(self.servidor.text == "" or self.usuario.text == "" or self.senha.text == ""):
+        if(self.broker.text == ""):
             popupWindow = Popup(title="erro",content = Label(text ="Preencha todos os campos"),size_hint=(None,None),size = (400,400))
             popupWindow.open()
             return
 
-        servidor = (int(self.porta.text),self.servidor.text,self.usuario.text,self.senha.text,1,int(self.porta.text))
+        servidor = (self.broker.text)
         db.setServerBoo(servidor)
-
-        self.set_cfg()
 
         self.remove_cad()
 

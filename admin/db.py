@@ -37,16 +37,11 @@ def getServerAdmin():
 def setServerAdmin(server_tup):
     print('setserver',server_tup)
     sql = '''UPDATE servidor
-        SET porta = ?,
-            servidor = ?,
-            login = ?,
-            senha = ?
-        WHERE id = 1'''
+        SET broker = ?
+        WHERE id = 1 or id = 0'''
 
     cur = conn_admin.cursor()
-    cur.execute(sql, server_tup)
+    cur.execute(sql, (server_tup,))
     conn_admin.commit()
 
 conn_admin = create_connection('Admin.db')
-
-setServerAdmin((123,'servidor','login','senha'))
