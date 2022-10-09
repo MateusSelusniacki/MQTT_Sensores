@@ -23,7 +23,7 @@ sub_accept_client.broker = config.broker
 sub_del.broker = config.broker
 publisher.broker = config.broker
 
-TESTE = 1
+TESTE = 0
 
 if(not TESTE):
     from rpi_rf import RFDevice
@@ -95,8 +95,8 @@ def admin_handler():
                 time.sleep(0.01)  
     else:
         fill_cmd = pulsefnow
-             
-
+    
+    print(fill_cmd)
     publisher.run('sub_press_btnsec',most_frequent(fill_cmd))
     fill_cmd = []
     threading.Thread(target = admin_handler).start()
@@ -185,24 +185,26 @@ if(TESTE):
             publisher.run('deleted_s_o_n0809',deleted_s_o_n)
         if(len(sub_db.response) > 0):
             sub_db.response.pop(0)
-            publisher.run('server_send_db',db.get_all(config.port,config.host,config.user,config.password))
+            sending = db.get_all(config.port,config.host,config.user,config.password)
+            print(sending)
+            publisher.run('server_send_db',sending)
         time.sleep(0.01)
 
 if(not TESTE):
     while True:
         if(len(inserting_db) != 0):
-            parsed = inserting_db.pop(1)
-            db_data = inserting_db.pop(0)
-            db.insertCode(db_data[0],db_data[1],db_data[2],db_data[3],parsed)
+            parsed = inserting_db.pop(0)
+            print('port, host...',config.port,config.host,config.user,config.password)
+            inserted_s_o_n = db.insertCode(config.port,config.host,config.user,config.password,parsed)
+            publisher.run('inserted_s_o_n0809',inserted_s_o_n)
         if(len(deleting_db) > 0):
-            not_parsed = inserting_db.pop(0)
-            insert_content = not_parsed.split(',')
-            db.deleteCode(insert_content[0],insert_content[1],insert_content[2],insert_content[3],insert_content[4])
+            parsed = deleting_db.pop(0)
+            print(parsed)
+            deleted_s_o_n = db.deleteCode(config.port,config.host,config.user,config.password,parsed)
+            publisher.run('deleted_s_o_n0809',deleted_s_o_n)
         if(len(sub_db.response) > 0):
-            not_parsed = sub_db.response.pop(0)
-            insert_content = not_parsed.split(',')
-            print(insert_content)
-            publisher.run('server_send_db',db.get_all(insert_content[0],insert_content[1],insert_content[2],insert_content[3],"tblcontroles",insert_content[4]))
+            sub_db.response.pop(0)
+            publisher.run('server_send_db',db.get_all(config.port,config.host,config.user,config.password))
         if rfdevice.rx_code_timestamp != timestamp:
             timestamp = rfdevice.rx_code_timestamp
             logging.info(str(rfdevice.rx_code) +

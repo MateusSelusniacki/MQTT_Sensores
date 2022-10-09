@@ -313,20 +313,27 @@ class Listar(Screen):
             return
         
         content_raw = sub_db.response.pop(0)
+        print('content_raw',content_raw)
+        teste2 = content_raw.replace('[','').replace('(','').replace(')','').replace(']','').replace(' ','').replace(',','')
 
-        parsed = re.split('[|(|,|)|]',content_raw.replace(' ','').replace('\'',''))[1:-1]
+        teste3 = teste2.split("'")
+        print(teste3)
+        j = 0
+        teste4 = []
+        for i in range(len(teste3)):
+            if(j%2 == 1):
+                teste4.append(teste3[j])
+            j += 1
 
-        content = []
-        i = 0
-        while i < len(parsed):
-            parsed[i] = int(parsed[i])
-            parsed[i+1] = parsed[i+1]
-            content.append(tuple(parsed[i:i+6]))
-            i += 8
+        j = 0
+        content =[]
+        while j < len(teste4):
+            content.append((teste4[j],teste4[j+1],teste4[j+2],teste4[j+3],teste4[j+4]))
+            j = j+5
 
         for i in content:
             self.boxlayout.add_widget(MDRectangleFlatButton(
-                text = i[3],
+                text = i[2],
                 size_hint = (.2,.05),
                 pos_hint = {'center_x':0.5},
                 on_release = self.btn_click
@@ -392,21 +399,36 @@ class Excluir(Screen):
             return
         
         content_raw = sub_db.response.pop(0)
+        print('content_raw',content_raw)
+        teste2 = content_raw.replace('[','').replace('(','').replace(')','').replace(']','').replace(' ','').replace(',','')
 
-        parsed = re.split('[|(|,|)|]',content_raw.replace(' ','').replace('\'',''))[1:-1]
+        teste3 = teste2.split("'")
+        print(teste3)
+        j = 0
+        teste4 = []
+        for i in range(len(teste3)):
+            if(j%2 == 1):
+                teste4.append(teste3[j])
+            j += 1
 
-        content = []
+        j = 0
+        content =[]
+        while j < len(teste4):
+            content.append((teste4[j],teste4[j+1],teste4[j+2],teste4[j+3],teste4[j+4]))
+            j = j+5
+
+        '''content = []
         i = 0
         print("parsed",parsed)
         while i < len(parsed):
-            parsed[i] = int(parsed[i])
+            parsed[i] = parsed[i]
             parsed[i+1] = parsed[i+1]
             content.append(tuple(parsed[i:i+6]))
-            i += 8
+            i += 8'''
 
         for i in content:
             self.boxlayout.add_widget(MDRectangleFlatButton(
-                text = i[3],
+                text = i[2],
                 size_hint = (.2,.05),
                 pos_hint = {'center_x':0.5},
                 on_release = self.btn_click

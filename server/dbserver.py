@@ -28,13 +28,14 @@ def create_connection(c_port,c_host,c_user,c_password):
             database="tblcontroles"
 
         )
+        return conn
     except mariadb.Error as e:
         print(f"Error: {e}")
 
 def insertCode(port,host,user,password,codigo): 
     print(port,host,user,password)
     conn = create_connection(port,host,user,password)
-    print(f'inserindo {codigo} no banco')
+    print(f'inserindo {codigo} no banco {conn}')
     try:
         sql = ''' INSERT INTO tblControles(IdentfControle,CodItem,NomeControle,DescricaoControle,CodControle)
                 VALUES(?,?,?,?,?) '''
@@ -43,8 +44,8 @@ def insertCode(port,host,user,password,codigo):
         conn.commit()
 
         return cur.lastrowid
-    except:
-        return -1
+    except mariadb.Error as e:
+        print(f"Error: {e}")
 
 def getCode(port,host,user,password,codigo):
     conn = create_connection(port,host,user,password)
@@ -115,13 +116,12 @@ def deleteCode(port,host,user,password,codigo):
             WHERE NomeControle = ?'''
         print('2d')
         cur = conn.cursor()
-        sdfadf()
         print('3d',codigo)
         cur.execute(sql, (codigo,))
         print('4d')
         conn.commit()
         print('deletado')
         return cur.lastrowid
-    except:
-        print('except')
+    except mariadb.Error as e:
+        print(f"Error: {e}")
         return -1

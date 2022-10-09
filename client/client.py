@@ -163,7 +163,7 @@ class mainApp(MDApp):
         print('cliente: enviando accept')
         
     def parse_sub_client_response(self,resp):
-        return resp.split(',')[1:-1]
+        return resp.split(',')[0:-1]
 
     def update_text_fields(self,texts):
         self.IdentfControle.text = texts[0]
@@ -177,6 +177,7 @@ class mainApp(MDApp):
         sub_client.run('client')
         print('2')
         self.comando = self.parse_sub_client_response(sub_client.response.pop(0))
+        print("comando: ",self.comando)
         print(self.comando,' 3')
         self.is_calling = True
 

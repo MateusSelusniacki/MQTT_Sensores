@@ -139,4 +139,3 @@ def deleteCode(port,host,user,password,codigo):
         print('except')
         return -1
 
-print(create_connection(3306,"localhost","root","dell"))
